@@ -164,7 +164,7 @@ How do we make the `probs` more uniform? The simplest idea is to find a way to r
 ```python
 # ...
 g  = torch.Generator().manual_seed(2147483647)
-C  = torch.randn((vocab_size, n_embd),                  generator=g)
+C  = torch.randn((vocab_size, n_embd),                 generator=g)
 W1 = torch.randn((block_size * n_embd, n_hidd),        generator=g) # * 0.1
 b1 = torch.randn(n_hidd,                               generator=g) # * 0.01
 W2 = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
@@ -241,7 +241,7 @@ To fix this, imagine squeezing the pre-activation distribution to make it narrow
 ```python
 # ...
 g  = torch.Generator().manual_seed(2147483647)
-C  = torch.randn((vocab_size, n_embd),                  generator=g)
+C  = torch.randn((vocab_size, n_embd),                 generator=g)
 W1 = torch.randn((block_size * n_embd, n_hidd),        generator=g) * 0.1
 b1 = torch.randn(n_hidd,                               generator=g) * 0.01
 W2 = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
@@ -306,7 +306,7 @@ Precisely tuned, fragile initializations matter less today thanks to some modern
   <div class="thecap">12) Saturation becomes small and stable.</div>
 </div>
 
-> For backprop, the benefits are even greater. I won't show the full picture here due to length, but it's worth trying out in the [notebook](https://github.com/telingc/telingc.github.io) in the repo.
+> For backprop, the benefits are even greater. I won't show the full picture here due to length, but it's worth trying out in the [notebook](https://github.com/telingc/telingc.github.io/blob/main/scripts/post1-naive-nn.ipynb) in the repo.
 
 ```python
 # ...
