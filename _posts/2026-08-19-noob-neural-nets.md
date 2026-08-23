@@ -1,27 +1,29 @@
 ---
 layout: post
 title: "Visualizing a simple neural network under the hood, from a naive view."
-excerpt: "Visualizing activation, gradients & batch normalization, a brief demonstration for neural nets built in an ancient way, from a NOOB perspective. A short hike through nn-zero-to-hero."
+excerpt: "Visualizing activation, gradients & batch normalization — a brief demonstration of neural nets built the old-fashioned way, from a NOOB perspective. A short hike through nn-zero-to-hero."
 date: 2026-08-19
 comments: true
 mathjax: true
 ---
 
-[Makemore](https://github.com/karpathy/makemore) of [Andrej](https://karpathy.ai/) confused me quite a lot while learning part 3. If topics like BatchNorm, KaimingInit confuse you as they confused me. I hope you find this helpful.
-Aimming to visualize activation, gradients & batch normalization, to briefly demonstrate neural nets built in an ancient way from a NOOB perspective. Enjoying a short hike through [nn-zero-to-hero](https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ).
+[Makemore](https://github.com/karpathy/makemore) by [Andrej](https://karpathy.ai/) confused me quite a lot while I was learning part 3. If topics like BatchNorm and Kaiming Init confuse you as much as they confused me, I hope you find this helpful.
+The goal is to visualize activations, gradients, and batch normalization — a brief demonstration of neural nets built the old-fashioned way, from a NOOB perspective. Enjoy this short hike through [nn-zero-to-hero](https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ).
 Let's jump right in.
 
-### WAAAIT, It's just a table of probabilities!
-Training the bigram neural net which takes two former characters, embedded, went through the hidden layer and then softmax calculated and got the probabilities prediction of the next character could be seemingly futile. 'Cause normalized logits looks exactly same with statistics in the graph below.
+### WAAAIT, it's just a table of probabilities!
 
-That's literally my naive thoughts after drawing this graph:
-> *"How about look up this table manually? Like the musing of a HLM (Human Language Model🧠🤖)"*
+Training a bigram neural net — one that takes the previous two characters, embeds them, passes them through a hidden layer, and then computes a softmax to obtain a probability distribution over the next character — can seem futile. Because the normalized logits look exactly the same as the statistics in the graph below.
+
+That was literally my naive thought after drawing this graph:
+> *"How about just looking this table up manually? Like the musing of an HLM (Human Language Model 🧠🤖)"*
+
 <div class="imgcap">
   <img src="/assets/2026-08-19/makemore_contrast.png" width="80%" style="display:block; margin:auto;">
   <div class="thecap">1) Bigram neural net visualization</div>
 </div>
 
-Looking at graph above(darker blocks means higher probability.), it's kinda natural for me to come up with the idea like, how about create this table with statistics and simply use random to look it up? What the net outputs finally is the probabilities which could be obtained use statistics.
+Looking at the graph above (darker blocks mean higher probability), it's only natural to wonder: why not build this table from statistics and simply sample from it? What the net ultimately outputs are probabilities that could be obtained by counting anyway.
 
 <table>
   <tr>
@@ -111,19 +113,19 @@ Looking at graph above(darker blocks means higher probability.), it's kinda natu
   <caption>name-like comparison</caption>
 </table>
 
-But the truth is often not the case 'cause if you want to scale up and get higher efficiency and performance that predicts well even with a smaller training set, the context offered by trigram is often the better choice. Looking at the table above, eightgram WaveNet is much more *"name-like"* to me. At this point, the probabilities model looks like this:
+But the truth is usually more nuanced. If you want to scale up and get better efficiency and performance — predictions that hold up even with a smaller training set — the extra context offered by a trigram (or longer) model is often the better choice. Looking at the table above, the eightgram WaveNet outputs sound much more *"name-like"* to me. At that point, the probability model looks like this:
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/cube.png" width="100%" style="display:block; margin:auto;">
   <div class="thecap">2) Trigram neural net visualization</div>
 </div>
 
-The 3-dimension heatmap on the left, representing the probabilities of under the condition of different character combinations, the next character is *a(the char)*. For example, the tiny green dot, stands for possibilities of `emm-->a` which is 28%.
+The 3D heatmap on the left represents the probability that the next character is *a*, conditioned on different character combinations. For example, the tiny green dot stands for the probability of `emm → a`, which is 28%.
 
-$$P(\mathrm{next\,character\,is\,}a|\mathrm{context\,is\,}emm)\approx0.28$$
+$$P(\text{next character is }a \mid \text{context is }emm) \approx 0.28$$
 
-And there's 27 cubes like this for the simplest net with out batchnorm. even it's a silly idea, I still think it's beautiful.🥹
-(Drawing this is just fun and cool, just ignore me.😄)
+And there are 27 cubes like this for the simplest net without batchnorm. Even though it's a silly idea, I still think it's beautiful. 🥹
+(Drawing this was just fun and cool — ignore me. 😄)
 
 ### High initial loss caused by improper initialization
 
@@ -132,11 +134,11 @@ And there's 27 cubes like this for the simplest net with out batchnorm. even it'
   <div class="thecap">3) loss.log10() decreasing with training</div>
 </div>
 
-As you can see, the initial loss is $\geqslant10^1.4\approx25.12$. But we have no reason to believe that any character is having more chance than others, so the loss of uniform distribution is expected, and it can be calculated as:
+As you can see, the initial loss is $\geqslant 10^{1.4} \approx 25.12$. But we have no reason to believe that any character has a higher chance than any other, so the loss under a uniform distribution is what we'd expect. It can be calculated as:
 
-$$-\ln\frac{1}{27} = 3\ln3\approx3.29583687$$
+$$-\ln\frac{1}{27} = 3\ln3 \approx 3.29583687$$
 
-I verified it in IDLE, this is how it goes:
+I verified it in IDLE — here's how it goes:
 
 ```python
 >>> import torch
@@ -146,31 +148,31 @@ I verified it in IDLE, this is how it goes:
 3.295837163925171
 ```
 
-> Playing this toy model, when Andrej saw this insanely high loss but he have to keep this hilarious moment 'til the next class, must be challenging.😂
+> Playing with this toy model, when Andrej saw this insanely high loss but had to save the punchline for the next class — that must have been challenging. 😂
 
-What's happening is `torch.randn` generates numbers from standard normal distribution $out_i\sim\mathcal{N}(0,1)$. So after the hidden layer, tanh and softmax, the probabilities can hardly be uniformed, and sadly it's getting pretty "paranoid".
+What's happening is that `torch.randn` generates numbers from a standard normal distribution, $out_i \sim \mathcal{N}(0,1)$. So after the hidden layer, tanh, and softmax, the probabilities can hardly be uniform — sadly, they get pretty "paranoid."
 
-By chance, I could have a crazy low loss 'cause my net is correctly confident on a random choice, but most likely, I'll run into a big big wrong. You'll find in the graph below distribution values of C obeys gaussian roughly, but when it comes to the mean of predictions in this batch, and the chance we have to get a *t* out of five trials is "promising". The yellow line below is the uniform distribution. Comparing to the distribution we have, there's a lot to optimize.
+By chance, I could get a crazy low loss because my net happens to be confidently correct on a random guess, but more often than not, I'll run into a big, big error. You'll see in the graph below that the distribution of C's values roughly follows a Gaussian, but when you look at the mean prediction across this batch, the chance of getting a *t* in five trials is "promising" (in the wrong way). The yellow line is the uniform distribution; compared to what we actually have, there's a lot of room for optimization.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/gaussian.png" width="100%" style="display:block; margin:auto;">
   <div class="thecap">4) Improper initialization.</div>
 </div>
 
-How to make the `probs` more uniformed? Well, the simplest idea is find a way to decrease the variance of the data, then the object I should operate is logits of cause. Hidden layer couldn't be touched, if so, scale down `W2` and initial `b2` to zero sounds reasonable, since it's matrix multiply, scale down a bit could bring a well decrease to the loss.
+How do we make the `probs` more uniform? The simplest idea is to find a way to reduce the variance of the data — and the object to operate on is, of course, the logits. The hidden layer shouldn't be touched, so scaling down `W2` and initializing `b2` to zero sounds reasonable: since it's a matrix multiplication, scaling down a bit can bring a nice drop in loss.
 
 ```python
 # ...
 g  = torch.Generator().manual_seed(2147483647)
-C  = torch.randn((vocab_size, n_embd),           generator = g)
-W1 = torch.randn((block_size * n_embd, n_hidd), generator = g) # * 0.1
-b1 = torch.randn(n_hidd,                        generator = g) # * 0.01
-W2 = torch.randn((n_hidd, vocab_size),          generator = g) * 0.01
-b2 = torch.randn(vocab_size,                    generator = g) * 0
+C  = torch.randn((vocab_size, n_embd),                  generator=g)
+W1 = torch.randn((block_size * n_embd, n_hidd),        generator=g) # * 0.1
+b1 = torch.randn(n_hidd,                               generator=g) # * 0.01
+W2 = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
+b2 = torch.randn(vocab_size,                           generator=g) * 0
 # ...
 ```
 
-And the result is that the initial loss was decreased from 27.9 to 3.3, slightly higher than $3\ln3$, and the final performance was raised by a decent number(final loss: 2.15->2.13 on val set). Of great significance, efficiency, now we skipped the duration of sliding down the steep *hocky stick bar*🏒.
+The result: the initial loss dropped from 27.9 to 3.3, slightly above $3\ln3$, and the final performance improved by a decent margin (val loss: 2.15 → 2.13). More importantly, efficiency — we now skip the long slog down the steep hockey-stick curve. 🏒
 
 <div class="imgcap">
   <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px;">
@@ -181,71 +183,73 @@ And the result is that the initial loss was decreased from 27.9 to 3.3, slightly
 </div>
 
 ### Do neural networks dream of dead neurons?
-So, as Andrej says, there's a problem hiding in the simple net currently. To identify this, one line of code is needed in order to record our grads:
+
+As Andrej says, there's a problem hiding in this simple net. To spot it, we need one line of code to record our gradients:
 
 ```python
-# ---minibatch construct--->>>
-ix      = torch.randint(0, Xtr.shape[0], (batch_size, ), generator = g)
-Xb, Yb  = Xtr[ix], Ytr[ix]
-# ---forward pass       --->>>
+# --- minibatch construct --->>>
+ix     = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g)
+Xb, Yb = Xtr[ix], Ytr[ix]
+# --- forward pass          --->>>
 emb     = C[Xb]
 embcat  = emb.view(emb.shape[0], -1)
 hpreact = embcat @ W1 + b1
 h       = torch.tanh(hpreact)
 logits  = h @ W2 + b2
 loss    = F.cross_entropy(logits, Yb)
-# ---backward pass      --->>>
+# --- backward pass         --->>>
 for p in parameters:
     p.grad = None
 
-t.retain_grad() for t in [hpreact] # <<<--- THIS IS IT!
+[t.retain_grad() for t in [hpreact]] # <<<--- THIS IS IT!
 
 loss.backward()
-# ---update             --->>>
+# --- update               --->>>
 lr = 0.1
 p.data += -lr * p.grad
 ```
 
-If I just draw the histogram of this out and see the grads of pre-activation, I believe this is even more *sweating* than watching the video. Just staring at this:
+If I just plot the histogram of the output and look at the gradients of the pre-activations, I think this is even more sweat-inducing than watching the video. Just stare at this:
 
-1. $$\frac{\partial}{\partial x} \tanh{x}\bigg|_{x=pre-activation_{ij}}=0$$
-  
-2. `p.data += -lr * p.grad` 
+1. $$\frac{\partial}{\partial x} \tanh{x}\bigg|_{x=\text{pre-activation}_{ij}} = 0$$
 
-Meaning that `pre_activation_ij.grad` is 0, and for the neuron pre_activation_ij, it will never be updated! These bad bad neurons are just like me in the university classes, sitting there and learning NOTHING. Neurons like this, we have totally 5000 more hiding behind tanh layer. It's being very kind to say that our hidden layer is a University.
+2. `p.data += -lr * p.grad`
+
+This means that `pre_activation_ij.grad` is 0, and for that neuron, it will never be updated! These dead neurons are just like me in a university lecture — sitting there and learning NOTHING. We have 5,000 more neurons like this hiding behind the tanh layer. It's generous to say our hidden layer is a university.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/dead_neurons.png" width="70%" style="display:block; margin:auto;">
   <div class="thecap">6) Dead neurons.</div>
 </div>
 
-*"Backward passing"* enough for now, so let's bring this question forward, and figure out where does this come from. Actually, people find this problem from activation h, there's tons of 1.00s in it. Area around $\pm1$ holds the major distribution density of values in h, if $h_{ij}=1$, then corresponding value in pre-activation.grad would be 0. BUT! you might argue, it couldn't be perfectly 1 'cause the index could never reach infinity, so why is that? Yes, and the float is not accurate enough to make sure huge numbers' tanh is not 1. The left graph below, red curve stands for the gradient while blue area is distribution. When values distributes outside the orange lines, their gradients are tend to be zero, referencing $\frac{\partial}{\partial x}\tanh{x}$.
+Enough backward-passing for now. Let's bring this question forward and figure out where this comes from. Actually, people notice this problem from the activation `h`: there are tons of 1.00s in it. The region around $\pm1$ holds most of the distribution density of values in `h`; if $h_{ij} = 1$, then the corresponding value in `pre-activation.grad` is 0. BUT! you might argue, it can't be *exactly* 1 because the input can never reach infinity — so why is that? Right, and floating-point precision isn't fine enough to guarantee that tanh of very large numbers isn't exactly 1. In the left graph below, the red curve is the gradient while the blue area is the distribution. When values fall outside the orange lines, their gradients tend toward zero, per $\frac{\partial}{\partial x}\tanh{x}$.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/density.png" width="100%" style="display:block; margin:auto;">
-  <div class="thecap">7) Values are in the plateau of tanh with minor gradients.</div>
+  <div class="thecap">7) Values sit in the plateau of tanh with near-zero gradients.</div>
 </div>
 
-Well, I hope it's clear enough. Intuitively, totally white bars are dead neurons. In this case, the net is just inactive. If you find the picture with its face paled, you should be, too.
+I hope that's clear enough. Intuitively, the completely white bars are dead neurons. In that case, the net is simply inactive. If the picture looks pale, you should be worried too.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/whites.png" width="100%" style="display:block; margin:auto;">
-  <div class="thecap">8) Whiter the pic is, more inefficient the net is.</div>
+  <div class="thecap">8) The whiter the picture, the more inefficient the net.</div>
 </div>
 
-To solve this issue, imagine squeezing the pre-activation distribution and make it thinner, thus values wont across the orange line. So scale down W1 and b1 is a good choice.
+To fix this, imagine squeezing the pre-activation distribution to make it narrower, so values don't cross the orange line. Scaling down W1 and b1 is a good choice.
 
 ```python
 # ...
 g  = torch.Generator().manual_seed(2147483647)
-C  = torch.randn((vocab_size, n_embd),           generator = g)
-W1 = torch.randn((block_size * n_embd, n_hidd), generator = g) * 0.1
-b1 = torch.randn(n_hidd,                        generator = g) * 0.01
-W2 = torch.randn((n_hidd, vocab_size),          generator = g) * 0.01
-b2 = torch.randn(vocab_size,                    generator = g) * 0
+C  = torch.randn((vocab_size, n_embd),                  generator=g)
+W1 = torch.randn((block_size * n_embd, n_hidd),        generator=g) * 0.1
+b1 = torch.randn(n_hidd,                               generator=g) * 0.01
+W2 = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
+b2 = torch.randn(vocab_size,                           generator=g) * 0
 # ...
 ```
-Now it's much better. The final loss was decreased from originally 2.15 to 2.13 before and now it's 2.10. And if the distribution is too concentrated, then the $tanh$ is doing nothing.
+
+Now it's much better. The final loss dropped from the original 2.15 to 2.13 earlier, and now to 2.10. And if the distribution gets too concentrated, then tanh is effectively doing nothing.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/correct_init.png" width="100%" style="display:block; margin:auto;">
@@ -253,7 +257,7 @@ Now it's much better. The final loss was decreased from originally 2.15 to 2.13 
   <div class="thecap">9) Now they're motivated neurons.</div>
 </div>
 
-### The myth, the legend, Kaiming Initialization!
+### The myth, the legend — Kaiming Initialization!
 
 ```python
 x = torch.randn(1000, 10)
@@ -262,22 +266,23 @@ y = x @ w
 print(x.mean(), y.mean())
 print(x.std(),  y.std())
 ```
-From the code above, what can we expect from mean and standard deviation?
-1. magical number = 1, standard deviation grows larger.
-2. magical number > 1, standard deviation grows even larger.
-3. 0 < magical number < 1, standard deviation decreases.
 
-The whole point is that finding a way to prevent the normal distribution shrinking to 0 or expand to infinity, and keep the standard deviation still be 1. [Kaiming Initialization](https://arxiv.org/abs/1502.01852) suggests the magical number should be $\sqrt{\frac{2}{fan_{in}}}$ for activation, and $\sqrt{\frac{gain^2}{fan_{in}}}$ for backward pass, gain depends on the non-linearity. In the case of $\tanh{x}$, $gain = \frac{5}{3}$. They're different because the ways they contract are quite different, so there must be different gains comes out to scale up and go against the non-linearity.
+From the code above, what can we expect for the mean and standard deviation?
+1. magical number = 1 → standard deviation grows.
+2. magical number > 1 → standard deviation grows even more.
+3. 0 < magical number < 1 → standard deviation shrinks.
+
+The whole point is to find a way to prevent the normal distribution from collapsing to 0 or blowing up to infinity — to keep the standard deviation at 1. [Kaiming Initialization](https://arxiv.org/abs/1502.01852) suggests the magical number should be $\sqrt{\frac{2}{fan_{in}}}$ for the forward pass, and $\sqrt{\frac{gain^2}{fan_{in}}}$ for the backward pass, where gain depends on the non-linearity. For $\tanh{x}$, $gain = \frac{5}{3}$. They differ because the forward and backward passes contract the distribution in different ways, so different gains are needed to counteract the non-linearity.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/kaiming.png" width="100%" style="display:block; margin:auto;">
   <img src="/assets/2026-08-19/kaiming_neurons.png" width="100%" style="display:block; margin:auto;">
-  <div class="thecap">10) Now they're stable Kaiming neurons, activation was initialized.</div>
+  <div class="thecap">10) Now they're stable Kaiming neurons; activations are properly initialized.</div>
 </div>
 
-Configuring $gain$ is nontrivial, choosing $gain=\frac{5}{3}$ for initialization is considering, comparing to $gain=1$, tanh is a squashing function, making the graph tend to gravitated to 0, if $gain$ is lower, it would be harder to fight against the tendency.
+Configuring the gain is nontrivial. Choosing $gain = \frac{5}{3}$ for initialization makes sense: compared to $gain = 1$, tanh is a squashing function that pulls the distribution toward 0, so a lower gain would struggle to counteract that tendency.
 
-And for $gain=4$, the activation tend to be way to saturated.
+And for $gain = 4$, the activations tend to be far too saturated.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/gain=1.png" width="100%" style="display:block; margin:auto;">
@@ -286,31 +291,32 @@ And for $gain=4$, the activation tend to be way to saturated.
   <div class="thecap">11) Different gains.</div>
 </div>
 
-Once we done with BatchNorm, the activation will not be so sensitive.
+Once we add BatchNorm, the activations become much less sensitive to initialization.
 
-> The math behind it, I'd like to leave it just for now.
+> The math behind it — I'd like to leave that for another time.
 
 ### Confusing BatchNorm
-Precisely configured and fragile initializations, are less important today due to some modern innovations, one of them is batch normalization. So if you want a normal gaussian for initialization, why not just make it gaussian? Sounds imaginative? But this is practical since this full operation is just about pre-activation initializations. Let's take a look at it's awesome outcomes and see how to implement it.
+
+Precisely tuned, fragile initializations matter less today thanks to some modern innovations — one of which is batch normalization. So if you want a standard Gaussian for initialization, why not just *make* it Gaussian? Sounds fanciful? But it's practical, since the whole operation is applied to the pre-activations. Let's look at its impressive results and how to implement it.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/batchnorm_gain=1.png" width="100%" style="display:block; margin:auto;">
   <img src="/assets/2026-08-19/batchnorm_gain=5over3.png" width="100%" style="display:block; margin:auto;">
   <img src="/assets/2026-08-19/batchnorm_gain=4.png" width="100%" style="display:block; margin:auto;">
-  <div class="thecap">12) Saturation become small and stable.</div>
+  <div class="thecap">12) Saturation becomes small and stable.</div>
 </div>
 
-> for backprops, the benefits are even more, I'm not going to show it fully here due to the length, but it's a nice choice to try it in the [notebook](https://github.com/telingc/telingc.github.io) in the repo.
+> For backprop, the benefits are even greater. I won't show the full picture here due to length, but it's worth trying out in the [notebook](https://github.com/telingc/telingc.github.io) in the repo.
 
 ```python
 # ...
 g            = torch.Generator().manual_seed(2147483647)
 kaiming_init = ((5 / 3) / ((block_size * n_embd) ** 0.5))
-C            = torch.randn((vocab_size, n_embd),           generator = g)
-W1           = torch.randn((block_size * n_embd, n_hidd), generator = g) * kaiming_init
-b1           = torch.randn(n_hidd,                        generator = g) * 0.01
-W2           = torch.randn((n_hidd, vocab_size),          generator = g) * 0.01
-b2           = torch.randn(vocab_size,                    generator = g) * 0
+C            = torch.randn((vocab_size, n_embd),                  generator=g)
+W1           = torch.randn((block_size * n_embd, n_hidd),        generator=g) * kaiming_init
+b1           = torch.randn(n_hidd,                               generator=g) * 0.01
+W2           = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
+b2           = torch.randn(vocab_size,                           generator=g) * 0
 
 bngain       = torch.ones((1, n_hidd))
 bnbias       = torch.zeros((1, n_hidd))
@@ -319,26 +325,26 @@ for i in range(200000):
 # ...
     bnmeani  = hpreact.mean(0, keepdim=True)
     bnstdi   = hpreact.std(0, keepdim=True)
-    hpreact  = bngain * (hpreact - bnmeani) / bnstdi - bnbias
+    hpreact  = bngain * (hpreact - bnmeani) / bnstdi + bnbias
 # ...
 ```
 
-For statistcs, scale up n times makes standard deviation enlarged n times, thus if you need to make the distribution aligned with zero, just minus the mean of the pre-activation, if you want the variance to be one, just devide by standard deviation. And most importantly, these are all took into our neural net, which means we can ensure to gain a roughly standard normal-like pre-activation every round, firing the non-linearity's all might, and even leave the net tuning more parameter knobs to fit the model better. Let's take a close look at these formulae, just because they're easy and useful. For my single layer tiny net, it's not gaining much from batchnorm, but when it comes to multi-layer nets, that would make the net a bit forgiving, WaveNet(part 5) is the case.
+Statistically, scaling up by a factor of $n$ enlarges the standard deviation by $n$. So if you need to center the distribution at zero, just subtract the mean of the pre-activations; if you want unit variance, just divide by the standard deviation. And most importantly, all of this is built into the neural net — meaning we can ensure a roughly standard-normal pre-activation every iteration, firing the non-linearity at full capacity, and even giving the net extra parameter knobs to tune for a better fit. Let's take a close look at these formulas, because they're simple and useful. For my tiny single-layer net, batchnorm doesn't help much, but for multi-layer nets it makes training more forgiving — WaveNet (part 5) is a case in point.
 
-1. $$\frac{1}{m}\sum_{i=1}^{m}x_i=\mu_{\mathcal{B}}\quad(\mathrm{the\,mean\,of\,the\,pre-activation.})$$
-2. $$\frac{1}{m-1}\sum_{i=1}^{m}(x_i-\mu_{\mathcal{B}})^2=\sigma_{\mathcal{B}}\quad(\mathrm{the\,variance\,of\,the\,pre-activation.})$$
-3. $$\frac{x_i-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^2+\epsilon}}=\hat{x_i}\quad(\mathrm{the\,normalization})$$
-4. $$\gamma\hat{x_i}+\beta=y_i\equiv\mathrm{BN}_{\gamma,\beta}(x_i)\quad(\mathrm{scale\,and\,shift})$$
+1. $$\frac{1}{m}\sum_{i=1}^{m}x_i = \mu_{\mathcal{B}} \quad (\text{the mean of the pre-activations})$$
+2. $$\frac{1}{m-1}\sum_{i=1}^{m}(x_i-\mu_{\mathcal{B}})^2 = \sigma_{\mathcal{B}}^2 \quad (\text{the variance of the pre-activations})$$
+3. $$\frac{x_i-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^2+\epsilon}} = \hat{x_i} \quad (\text{normalization})$$
+4. $$\gamma\hat{x_i}+\beta = y_i \equiv \mathrm{BN}_{\gamma,\beta}(x_i) \quad (\text{scale and shift})$$
 
-Implementing BatchNorm is quite relaxing with tutorial, but there's one problem hiding behind this vibe, concentrating on formula 3, we're now calculating with variance and mean that means once we implement BatchNorm, the input now become a batch. So how to feed in a single example and get a sensible result out?
+Implementing BatchNorm is quite straightforward with a tutorial, but there's a subtle problem lurking here. Focus on formula 3: we're computing the variance and mean from a batch, which means once we implement BatchNorm, the input is inherently a batch. So how do we feed in a single example and get a sensible result?
 
-One intuitive idea is simply calibrate these two value and make them fixed after training. 
+One intuitive idea is to simply calibrate these two values and fix them after training.
 
 ```python
-# calibrate the batch norm at the end of training
+# calibrate batch norm at the end of training
 
 with torch.no_grad():
-  # pass the training set through
+    # pass the training set through
     emb     = C[Xtr]
     embcat  = emb.view(emb.shape[0], -1)
     hpreact = embcat @ W1 # + b1
@@ -347,10 +353,10 @@ with torch.no_grad():
     bnstd   = hpreact.std(0, keepdim=True)
 ```
 
-But that isn't suggested in the video, instead we're calculating mean and standard deviation running along the training. And here is implementation:
+But that isn't what's suggested in the video. Instead, we compute a running mean and standard deviation during training. Here's the implementation:
 
 ```python
-# before it is forward pass.
+# inside the forward pass
 
 bnmeani = hpreact.mean(0, keepdim=True)
 bnstdi  = hpreact.std(0, keepdim=True)
@@ -367,17 +373,15 @@ loss    = F.cross_entropy(logits, Yb)
 # and the backward pass.
 ```
 
-The video and the code left us a unstated math problem, the magical number $0.999$ and $0.001$ above and why this is able to calculate the mean and standard deviation roughly. the $0.001$ in it was called *momentum*, which we'll see after we summarize our net into objects.
+The video and the code leave an unstated math problem: the magical numbers 0.999 and 0.001 above, and why this gives a reasonable estimate of the mean and standard deviation. The 0.001 is called *momentum*, which we'll see again after we refactor our net into objects.
 
-
-
-And here is the loss comparison between running calculation and fixed mean&std.
+And here's the loss comparison between running statistics and fixed mean/std.
 
 <table>
  <tr>
-   <th>set\method</th>
-   <th>loss using running mean&std</th>
-   <th>loss using fixed mean&std</th>
+   <th>set \ method</th>
+   <th>loss using running mean & std</th>
+   <th>loss using fixed mean & std</th>
  </tr>
  <tr>
    <td>training set</td>
@@ -385,7 +389,7 @@ And here is the loss comparison between running calculation and fixed mean&std.
    <td>2.079</td>
  </tr>
  <tr>
-   <td>validate set</td>
+   <td>validation set</td>
    <td>2.113</td>
    <td>2.113</td>
  </tr>
@@ -397,22 +401,24 @@ And here is the loss comparison between running calculation and fixed mean&std.
  <caption>loss comparison</caption>
 </table>
 
-The losses of the two are basically the same, skipping the explicit stage of calibration is for efficiency, when working on a larger and deeper net like GPT-3 who have 175 billion parameters in 96 layers, just imagine adding a calibration stage for the model, a explicit stage may be both time and financial consuming.
+The losses are basically the same. Skipping the explicit calibration stage is for efficiency: when working on a larger, deeper net like GPT-3 — 175 billion parameters across 96 layers — just imagine adding a calibration pass. An explicit stage could be both time- and financially consuming.
 
-And that's my first blog, hope you like it.
+And that's my first blog. Hope you like it.
 
 ---
-### Bonus topic: pool balls
-And here is what I found interesting, but there's no need to read. It's meaningless but I still spend quite a while and don't want to waste it.
 
-Intuitively, it reminds me to consider from the view of elastic collision, like when softmax, the normalization function was added another parameter *Temprature*, then you can view from the point of partition function.
+### Bonus topic: pool balls
+
+Here's something I found interesting. You don't have to read it — it's meaningless, but I spent quite a while on it and don't want it to go to waste.
+
+Intuitively, it reminds me of elastic collision. Think of softmax: when the normalization function gets an extra parameter, *Temperature*, you can view it through the lens of the partition function.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/momentum.jpg" width="50%" style="display:block; margin:auto;">
-  <div class="thecap">Momentum of a pool cue ball is transferred to the racked balls after collision. Found on wikipedia.</div>
+  <div class="thecap">Momentum of a pool cue ball is transferred to the racked balls after collision. Found on Wikipedia.</div>
 </div>
 
-From the formula below, we could construct a physical model consists of two pool ball-like particles, under the view of classic dynamics. It's not very tricky to infer that to make the collision satisfy the equivalent equation 2), $\frac{m_2}{m_1} = 1999$ and $v_1 = 1\mathrm{m/s}$ initially.
+From the formula below, we can construct a physical model of two pool-ball-like particles under classical dynamics. It's not hard to show that for the collision to satisfy the equivalent equation 2), we need $\frac{m_2}{m_1} = 1999$ and $v_1 = 1\,\mathrm{m/s}$ initially.
 
 <div class="imgcap">
   <img src="/assets/2026-08-19/elastic_collision.png" width="50%" style="display:block; margin:auto;">
@@ -422,26 +428,25 @@ From the formula below, we could construct a physical model consists of two pool
 $$1)\quad bnmean_{running} = 0.999 \times bnmean_{running} + 0.001 \times bnmean_{i}$$
 $$2)\quad \Rightarrow v_2 = (1-0.001) v_1 + 0.001 w_1$$
 
-Thus we could imagine that there's numerous pool balls like $m_1$ having different velocity $w_i$ but same mass $m_1$, colliding with $m_2$ from the front, 'cause the mass of $m_2$ is much larger than $m_1$, thus $m_2$ will never catch the ball weights $m_1$ after the collision.
-Inductionally, it's easy to verify the velocity of $m_2$ after nth collision is
+So we can imagine many pool balls of mass $m_1$, each with a different velocity $w_i$, colliding head-on with $m_2$. Because $m_2$ is much heavier than $m_1$, $m_2$ will never overtake the lighter balls after the collision.
 
-$$v_n = (1-momentum)^{n-1}+momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}w_i,\, for\,n\geqslant 2$$
+By induction, it's easy to verify that the velocity of $m_2$ after the $n$-th collision is
 
-Due to
+$$v_n = (1-momentum)^{n-1} + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}w_i, \quad \text{for } n\geqslant 2$$
 
-$$1)\quad v_1 = 1\,\, thus\,\, v_2 = (1-momentum)^1+(momentum)w_1$$
-$$2)\quad v_{n+1} = (1-momentum)v_n+momentum \cdot w_n$$
-$$\qquad\qquad=(1-momentum)^n + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-i}w_i + momentum \cdot w_n$$
-$$\qquad\qquad=(1-momentum)^n + momentum\sum_{i=1}^{n}(1-momentum)^{n-i}w_i$$
+Since
 
-You can take the pool balls example as a interesting coinstance, but intuitively there's an explanation that numerous balls colliding with the mother ball $m_2$ whose mass is bigger than small tiny balls weighting $m_1=\frac{1}{1999}m_2$. After a while, the mother ball will have the mean velocity of the small balls.
+$$1)\quad v_1 = 1 \implies v_2 = (1-momentum)^1 + (momentum)w_1$$
+$$2)\quad v_{n+1} = (1-momentum)v_n + momentum \cdot w_n$$
+$$\qquad\qquad = (1-momentum)^n + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-i}w_i + momentum \cdot w_n$$
+$$\qquad\qquad = (1-momentum)^n + momentum\sum_{i=1}^{n}(1-momentum)^{n-i}w_i$$
 
-So, after some bonus talks, back to our BatchNorm, we could now calculate the mean and std of the nth training ($n\geqslant2$).
+You can take the pool-ball analogy as an interesting coincidence, but intuitively there's a real explanation: many small balls colliding with a "mother ball" $m_2$ whose mass is much larger ($m_1 = \frac{1}{1999}m_2$). After enough collisions, the mother ball settles at roughly the mean velocity of the small balls.
 
-$$bnmean_{running,n} = (1-momentum)^{n-1}+momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}bnmean_i$$
+So, after this bonus detour, back to BatchNorm — we can now express the mean and std of the $n$-th training step ($n \geqslant 2$):
 
-$momentum$ is relatively a small value, under the scale of 200000 times of training, $(1-momentum)^{n-1}$ decrease exponentially to zero. The another factor $momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}bnmean_i$, for $bnmean$s, the bigger the index is, its significance to $bnmean_{running}$ become less and less.
+$$bnmean_{running,n} = (1-momentum)^{n-1} + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}bnmean_i$$
 
-To decide the value of the magical number $momentum$, we could have a baseline to compress the data, like $\frac{1}{1000}$ for dataset scaling $10^5$ for example.
+*momentum* is a relatively small value. At the scale of 200,000 training iterations, $(1-momentum)^{n-1}$ decays exponentially to zero. As for the other term, $momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}bnmean_i$ — the larger the index of a $bnmean_i$, the less weight it carries in the running average.
 
----
+To choose the value of the magical *momentum*, you can use a baseline tied to the data scale — for example, $\frac{1}{1000}$ for a dataset on the order of $10^5$.
