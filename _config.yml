@@ -1,0 +1,27 @@
+# Site settings
+title: telingc blog
+email: 251240041@smail.nju.edu.cn
+description: "To seek out and to understand is our way of living."
+baseurl: ""
+url: "http://telingc.github.io"
+github_username:  telingc
+
+# Build settings
+markdown: kramdown
+permalink: pretty
+
+highlighter: rouge
+kramdown:
+  input: GFM
+  auto_ids: true
+  syntax_highlighter: rouge
+
+# giscus comments
+giscus:
+  repo: ""            # 例如 "telingc/telingc.github.io"
+  repo_id: ""         # 例如 "R_kgD..."
+  category: ""        # 例如 "Announcements"
+  category_id: ""     # 例如 "DIC_kwD..."
+  mapping: pathname
+  theme: dark
+  lang: zh-CN
