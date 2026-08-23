@@ -18,10 +18,11 @@ kramdown:
 
 # giscus comments
 giscus:
-  repo: ""            # 例如 "telingc/telingc.github.io"
-  repo_id: ""         # 例如 "R_kgD..."
-  category: ""        # 例如 "Announcements"
-  category_id: ""     # 例如 "DIC_kwD..."
+  repo: "telingc/telingc.github.io"
+  repo_id: "R_kgDOT9Vqig"
+  category: "Announcements"
+  category_id: "DIC_kwDOT9Vqis4DDuHh"
   mapping: pathname
+  input_position: top
   theme: dark
   lang: zh-CN
