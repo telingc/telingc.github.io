@@ -8,17 +8,19 @@ includelink: true
 #### Hi! I'm Teling C. I like to learn something new!
 
 
-2025-####: Now I'm learning in Nanjing University, and I'm still finding my pace.
+2025–present: Studying at Nanjing University, still finding my pace.
 
-2022-2025: I was taking high school at MDFZ, Yunnan. The ordinary place I proud of.
+2022–2025: Attended high school at MDFZ, Yunnan — an ordinary place I'm proud of.
 
 ---
 
 #### bio
-[Currently there's nothing.](https://github.com/telingc)
+
+[Nothing here yet.](https://github.com/telingc)
 
 ---
 
 #### todo
-- [ ] write a blog about cs61a sp26.
-- [ ] complete learning nn-zero-to-hero.
+
+- [ ] Write a blog about CS61A sp26.
+- [ ] Finish nn-zero-to-hero.
