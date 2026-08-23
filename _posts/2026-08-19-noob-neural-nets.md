@@ -414,7 +414,7 @@ Here's something I found interesting. You don't have to read it — it's meaning
 Intuitively, it reminds me of elastic collision. Think of softmax: when the normalization function gets an extra parameter, *Temperature*, you can view it through the lens of the partition function.
 
 <div class="imgcap">
-  <img src="/assets/2026-08-19/momentum.jpg" width="50%" style="display:block; margin:auto;">
+  <img src="/assets/2026-08-19/momentum.png" width="50%" style="display:block; margin:auto;">
   <div class="thecap">Momentum of a pool cue ball is transferred to the racked balls after collision. Found on Wikipedia.</div>
 </div>
 
