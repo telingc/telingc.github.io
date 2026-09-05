@@ -39,14 +39,6 @@ Looking at the graph above (darker blocks mean higher probability), it's only na
     <td>attherin</td>
   </tr>
   <tr>
-    <td>halayan</td>
-    <td>laikaela</td>
-  </tr>
-  <tr>
-    <td>jazonte</td>
-    <td>amalah</td>
-  </tr>
-  <tr>
     <td>den</td>
     <td>auri</td>
   </tr>
@@ -55,24 +47,12 @@ Looking at the graph above (darker blocks mean higher probability), it's only na
     <td>cayleigh</td>
   </tr>
   <tr>
-    <td>kaeli</td>
-    <td>phood</td>
-  </tr>
-  <tr>
-    <td>nellara</td>
-    <td>glensie</td>
-  </tr>
-  <tr>
     <td>chaiiy</td>
     <td>trulan</td>
   </tr>
   <tr>
     <td>kaleigh</td>
     <td>osway</td>
-  </tr>
-  <tr>
-    <td>ham</td>
-    <td>anzey</td>
   </tr>
   <tr>
     <td>join</td>
@@ -87,24 +67,8 @@ Looking at the graph above (darker blocks mean higher probability), it's only na
     <td>diona</td>
   </tr>
   <tr>
-    <td>livabi</td>
-    <td>colsleigh</td>
-  </tr>
-  <tr>
-    <td>wanelo</td>
-    <td>suo</td>
-  </tr>
-  <tr>
-    <td>dearynix</td>
-    <td>jatteren</td>
-  </tr>
-  <tr>
     <td>kaelynn</td>
     <td>jerine</td>
-  </tr>
-  <tr>
-    <td>demed</td>
-    <td>whytus</td>
   </tr>
   <tr>
     <td>edi</td>
@@ -312,7 +276,7 @@ Precisely tuned, fragile initializations matter less today thanks to some modern
 # ...
 g            = torch.Generator().manual_seed(2147483647)
 kaiming_init = ((5 / 3) / ((block_size * n_embd) ** 0.5))
-C            = torch.randn((vocab_size, n_embd),                  generator=g)
+C            = torch.randn((vocab_size, n_embd),                 generator=g)
 W1           = torch.randn((block_size * n_embd, n_hidd),        generator=g) * kaiming_init
 b1           = torch.randn(n_hidd,                               generator=g) * 0.01
 W2           = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
@@ -425,28 +389,36 @@ From the formula below, we can construct a physical model of two pool-ball-like 
   <div class="thecap">The model I imagine.</div>
 </div>
 
-$$1)\quad bnmean_{running} = 0.999 \times bnmean_{running} + 0.001 \times bnmean_{i}$$
-$$2)\quad \Rightarrow v_2 = (1-0.001) v_1 + 0.001 w_1$$
+$1)\quad bm_{r} = 0.999 \times bm_{r} + 0.001 \times bnmean_{i}$
+
+$2)\quad v_2 = (1-0.001) v_1 + 0.001 w_1$
+
+$bm_r$ for `bnmean_running`.
 
 So we can imagine many pool balls of mass $m_1$, each with a different velocity $w_i$, colliding head-on with $m_2$. Because $m_2$ is much heavier than $m_1$, $m_2$ will never overtake the lighter balls after the collision.
 
 By induction, it's easy to verify that the velocity of $m_2$ after the $n$-th collision is
 
-$$v_n = (1-momentum)^{n-1} + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}w_i, \quad \text{for } n\geqslant 2$$
+$$v_n = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}w_i\, , \, n\geqslant 2$$
 
 Since
 
-$$1)\quad v_1 = 1 \implies v_2 = (1-momentum)^1 + (momentum)w_1$$
-$$2)\quad v_{n+1} = (1-momentum)v_n + momentum \cdot w_n$$
-$$\qquad\qquad = (1-momentum)^n + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-i}w_i + momentum \cdot w_n$$
-$$\qquad\qquad = (1-momentum)^n + momentum\sum_{i=1}^{n}(1-momentum)^{n-i}w_i$$
+$1)\quad v_1 = 1 \implies v_2 = (1-m)^1 + m\cdot w_1$
+
+$2)\quad v_{n+1} = (1-m)v_n + m \cdot w_n$
+
+$\qquad\qquad = (1-m)^n + m\sum_{i=1}^{n-1}(1-m)^{n-i}w_i + m \cdot w_n$
+
+$\qquad\qquad = (1-m)^n + m\sum_{i=1}^{n}(1-m)^{n-i}w_i$
+
+$m$ for $momentum$.
 
 You can take the pool-ball analogy as an interesting coincidence, but intuitively there's a real explanation: many small balls colliding with a "mother ball" $m_2$ whose mass is much larger ($m_1 = \frac{1}{1999}m_2$). After enough collisions, the mother ball settles at roughly the mean velocity of the small balls.
 
 So, after this bonus detour, back to BatchNorm — we can now express the mean and std of the $n$-th training step ($n \geqslant 2$):
 
-$$bnmean_{running,n} = (1-momentum)^{n-1} + momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}bnmean_i$$
+$$bnmean_{running,n} = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bnmean_i$$
 
-*momentum* is a relatively small value. At the scale of 200,000 training iterations, $(1-momentum)^{n-1}$ decays exponentially to zero. As for the other term, $momentum\sum_{i=1}^{n-1}(1-momentum)^{n-1-i}bnmean_i$ — the larger the index of a $bnmean_i$, the less weight it carries in the running average.
+*momentum* is a relatively small value. At the scale of 200,000 training iterations, $(1-m)^{n-1}$ decays exponentially to zero. As for the other term, $m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bnmean_i$ — the larger the index of a $bnmean_i$, the less weight it carries in the running average.
 
 To choose the value of the magical *momentum*, you can use a baseline tied to the data scale — for example, $\frac{1}{1000}$ for a dataset on the order of $10^5$.
