@@ -410,7 +410,9 @@ So we can imagine many pool balls of mass $m_1$, each with a different velocity 
 
 By induction, it's easy to verify that the velocity of $m_2$ after the $n$-th collision is
 
-$$v_n = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}w_i\, , \, n\geqslant 2$$
+$\text{for }n\geqslant 2,$
+
+$v_n = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}w_i$
 
 Since
 
@@ -426,7 +428,7 @@ You can take the pool-ball analogy as an interesting coincidence, but intuitivel
 
 So, after this bonus detour, back to BatchNorm — we can now express the mean and std of the $n$-th training step ($n \geqslant 2$):
 
-$$bm_{running,n} = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bm_i$$
+$$bm_{n} = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bm_i$$
 
 *momentum* is a relatively small value. At the scale of 200,000 training iterations, $(1-m)^{n-1}$ decays exponentially to zero. As for the other term, $m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bnmean_i$ — the larger the index of a $bnmean_i$, the less weight it carries in the running average.
 
