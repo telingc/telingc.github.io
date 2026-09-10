@@ -128,11 +128,11 @@ How do we make the `probs` more uniform? The simplest idea is to find a way to r
 ```python
 # ...
 g  = torch.Generator().manual_seed(2147483647)
-C  = torch.randn((vocab_size, n_embd),                 generator=g)
-W1 = torch.randn((block_size * n_embd, n_hidd),        generator=g) # * 0.1
-b1 = torch.randn(n_hidd,                               generator=g) # * 0.01
-W2 = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
-b2 = torch.randn(vocab_size,                           generator=g) * 0
+C  = torch.randn((vocab_size, n_embd),          generator=g)
+W1 = torch.randn((block_size * n_embd, n_hidd), generator=g) # * 0.1
+b1 = torch.randn(n_hidd,                        generator=g) # * 0.01
+W2 = torch.randn((n_hidd, vocab_size),          generator=g) * 0.01
+b2 = torch.randn(vocab_size,                    generator=g) * 0
 # ...
 ```
 
@@ -205,11 +205,11 @@ To fix this, imagine squeezing the pre-activation distribution to make it narrow
 ```python
 # ...
 g  = torch.Generator().manual_seed(2147483647)
-C  = torch.randn((vocab_size, n_embd),                 generator=g)
-W1 = torch.randn((block_size * n_embd, n_hidd),        generator=g) * 0.1
-b1 = torch.randn(n_hidd,                               generator=g) * 0.01
-W2 = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
-b2 = torch.randn(vocab_size,                           generator=g) * 0
+C  = torch.randn((vocab_size, n_embd),          generator=g)
+W1 = torch.randn((block_size * n_embd, n_hidd), generator=g) * 0.1
+b1 = torch.randn(n_hidd,                        generator=g) * 0.01
+W2 = torch.randn((n_hidd, vocab_size),          generator=g) * 0.01
+b2 = torch.randn(vocab_size,                    generator=g) * 0
 # ...
 ```
 
@@ -270,17 +270,17 @@ Precisely tuned, fragile initializations matter less today thanks to some modern
   <div class="thecap">12) Saturation becomes small and stable.</div>
 </div>
 
-> For backprop, the benefits are even greater. I won't show the full picture here due to length, but it's worth trying out in the [notebook](https://github.com/telingc/telingc.github.io/blob/main/scripts/post1-naive-nn.ipynb) in the repo.
+> For backprop, the benefits are even greater. I won't show the full picture here due to length, but it's worth trying out in the [notebook](https://github.com/telingc/telingc.github.io/blob/main/scripts/post_1/post1-naive-nn.ipynb) in the repo.
 
 ```python
 # ...
 g            = torch.Generator().manual_seed(2147483647)
 kaiming_init = ((5 / 3) / ((block_size * n_embd) ** 0.5))
-C            = torch.randn((vocab_size, n_embd),                 generator=g)
-W1           = torch.randn((block_size * n_embd, n_hidd),        generator=g) * kaiming_init
-b1           = torch.randn(n_hidd,                               generator=g) * 0.01
-W2           = torch.randn((n_hidd, vocab_size),                 generator=g) * 0.01
-b2           = torch.randn(vocab_size,                           generator=g) * 0
+C            = torch.randn((vocab_size, n_embd),          generator=g)
+W1           = torch.randn((block_size * n_embd, n_hidd), generator=g) * kaiming_init
+b1           = torch.randn(n_hidd,                        generator=g) * 0.01
+W2           = torch.randn((n_hidd, vocab_size),          generator=g) * 0.01
+b2           = torch.randn(vocab_size,                    generator=g) * 0
 
 bngain       = torch.ones((1, n_hidd))
 bnbias       = torch.zeros((1, n_hidd))
@@ -295,10 +295,21 @@ for i in range(200000):
 
 Statistically, scaling up by a factor of $n$ enlarges the standard deviation by $n$. So if you need to center the distribution at zero, just subtract the mean of the pre-activations; if you want unit variance, just divide by the standard deviation. And most importantly, all of this is built into the neural net — meaning we can ensure a roughly standard-normal pre-activation every iteration, firing the non-linearity at full capacity, and even giving the net extra parameter knobs to tune for a better fit. Let's take a close look at these formulas, because they're simple and useful. For my tiny single-layer net, batchnorm doesn't help much, but for multi-layer nets it makes training more forgiving — WaveNet (part 5) is a case in point.
 
-1. $$\frac{1}{m}\sum_{i=1}^{m}x_i = \mu_{\mathcal{B}} \quad (\text{the mean of the pre-activations})$$
-2. $$\frac{1}{m-1}\sum_{i=1}^{m}(x_i-\mu_{\mathcal{B}})^2 = \sigma_{\mathcal{B}}^2 \quad (\text{the variance of the pre-activations})$$
-3. $$\frac{x_i-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^2+\epsilon}} = \hat{x_i} \quad (\text{normalization})$$
-4. $$\gamma\hat{x_i}+\beta = y_i \equiv \mathrm{BN}_{\gamma,\beta}(x_i) \quad (\text{scale and shift})$$
+1. $\text{the mean of the pre-activations}$
+
+$$\frac{1}{m}\sum_{i=1}^{m}x_i = \mu_{\mathcal{B}}$$
+
+2. $\text{the variance of the pre-activations}$
+
+$$\frac{1}{m-1}\sum_{i=1}^{m}(x_i-\mu_{\mathcal{B}})^2 = \sigma_{\mathcal{B}}^2$$
+
+3. $\text{normalization}$
+
+$$\frac{x_i-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^2+\epsilon}} = \hat{x_i}$$
+
+4. $\text{scale and shift}$
+
+$$\gamma\hat{x_i}+\beta = y_i \equiv \mathrm{BN}_{\gamma,\beta}(x_i)$$
 
 Implementing BatchNorm is quite straightforward with a tutorial, but there's a subtle problem lurking here. Focus on formula 3: we're computing the variance and mean from a batch, which means once we implement BatchNorm, the input is inherently a batch. So how do we feed in a single example and get a sensible result?
 
@@ -407,8 +418,6 @@ $1)\quad v_1 = 1 \implies v_2 = (1-m)^1 + m\cdot w_1$
 
 $2)\quad v_{n+1} = (1-m)v_n + m \cdot w_n$
 
-$\qquad\qquad = (1-m)^n + m\sum_{i=1}^{n-1}(1-m)^{n-i}w_i + m \cdot w_n$
-
 $\qquad\qquad = (1-m)^n + m\sum_{i=1}^{n}(1-m)^{n-i}w_i$
 
 $m$ for $momentum$.
@@ -417,7 +426,7 @@ You can take the pool-ball analogy as an interesting coincidence, but intuitivel
 
 So, after this bonus detour, back to BatchNorm — we can now express the mean and std of the $n$-th training step ($n \geqslant 2$):
 
-$$bnmean_{running,n} = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bnmean_i$$
+$$bm_{running,n} = (1-m)^{n-1} + m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bm_i$$
 
 *momentum* is a relatively small value. At the scale of 200,000 training iterations, $(1-m)^{n-1}$ decays exponentially to zero. As for the other term, $m\sum_{i=1}^{n-1}(1-m)^{n-1-i}bnmean_i$ — the larger the index of a $bnmean_i$, the less weight it carries in the running average.
 
