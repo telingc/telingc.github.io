@@ -191,7 +191,7 @@ To make the idea of a series concrete, we take the study above and show **one sl
   <div class="thecap">Figure 4: Slices from five series of one study. Corner tags: plane and series id. (Source: competition data)</div>
 </div>
 
-In this example the study has two sagittal series, two coronal series, and one axial series. Do all studies follow the same pattern? **No.** In `train_series.csv` there are 24,371 series rows and 4,407 studies, so about \(24{,}371 / 4{,}407 \approx 5.53\) series per study on average. Other studies contain more or fewer series, including repeated acquisitions in the same plane.
+In this example the study has two sagittal series, two coronal series, and one axial series. Do all studies follow the same pattern? **No.** In `train_series.csv` there are 24,371 series rows and 4,407 studies, so about $24{,}371 / 4{,}407 \approx 5.53$ series per study on average. Other studies contain more or fewer series, including repeated acquisitions in the same plane.
 
 For slices, we take **22 consecutive slices** from the first series in the table. This is what we get:
 
@@ -253,7 +253,7 @@ This competition uses **macro-averaged ROC AUC**: calculate an AUC for each of t
 
 For a smaller example, imagine predicting whether each student has an apple or an orange in their pocket. Both can be present, just as several MRI findings can coexist.
 
-For one fruit, choose a threshold \(t\): predict positive when the model's score is at least \(t\). The **true positive rate** is the fraction of actual positives correctly identified; the **false positive rate** is the fraction of actual negatives incorrectly marked positive. Changing the threshold gives points on the ROC curve, with FPR on the horizontal axis and TPR on the vertical axis.
+For one fruit, choose a threshold $t$: predict positive when the model's score is at least $t$. The **true positive rate** is the fraction of actual positives correctly identified; the **false positive rate** is the fraction of actual negatives incorrectly marked positive. Changing the threshold gives points on the ROC curve, with FPR on the horizontal axis and TPR on the vertical axis.
 
 Here is the example data:
 
@@ -306,7 +306,7 @@ Here is the example data:
   <div class="thecap">Figure 8: ROC curves for the apple and orange example. Apple AUC = 0.833, orange AUC = 0.750, and macro AUC = 0.792. (Source: Python script)</div>
 </div>
 
-The area under each ROC curve summarizes ranking quality. An AUC of 1 means perfect ranking on these examples. For the two fruits, the macro average is approximately \((0.8333 + 0.7500) / 2 = 0.7917\).
+The area under each ROC curve summarizes ranking quality. An AUC of 1 means perfect ranking on these examples. For the two fruits, the macro average is approximately $(0.8333 + 0.7500) / 2 = 0.7917$.
 
 The same calculation fits in a few lines of Python:
 
