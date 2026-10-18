@@ -279,8 +279,8 @@ a:visited { color: #7a94bd; }
 }
 
 /* Tables */
-.post-content > table {
-  margin: 20px auto;
+.post-content table {
+  margin: 0 auto;
   border-collapse: collapse;
   background-color: #1f1f1f;
 }
@@ -450,4 +450,27 @@ caption {
     width: auto;
     margin: 0 0 15px; }
 
+}
+
+/* Wide tables scroll locally without changing the width of the document. */
+.post-content .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+.post-content .table-scroll:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 3px;
+}
+/* Accessible fallback when JavaScript is disabled; wrapper tables keep display:table. */
+.post-content > table {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 20px auto;
+}
+@media print {
+  .post-content .table-scroll { overflow: visible; }
+  .post-content > table { display: table; max-width: none; }
 }
