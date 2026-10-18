@@ -7,10 +7,10 @@ includelink: true
 
 Hi! I'm Teling Cao. I like to learn something new!
 
-#### contact
+#### Contact
 251240041@smail.nju.edu.cn
 
-#### bio
+#### About me
 
 2025–present: Studying at Nanjing University, still finding my pace.
 
@@ -18,6 +18,6 @@ Hi! I'm Teling Cao. I like to learn something new!
 
 [So far, nothing special here yet.](https://github.com/telingc)
 
-#### todo
+#### Ongoing
 
-- [x] Finish nn-zero-to-hero.
+- **What I'm learning recently**: [QA-Pages](https://telingc.github.io/qa/)
