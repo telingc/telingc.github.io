@@ -4,5 +4,5 @@
     <path d="M13 24A11 11 0 0 1 24 35"/>
     <path d="M13 13A22 22 0 0 1 35 35" transform="translate(1.5 -1.5)"/>
   </g>
-  <circle cx="13" cy="35" r="3.3" fill="#fff"/>
+  <circle cx="13" cy="35" r="3.6" fill="#fff"/>
 </svg>
